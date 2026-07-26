@@ -1,0 +1,36 @@
+# Task 4 - Daily AWS Cost Alert Using Cost Explorer API and SNS
+
+## Objective
+
+Automatically monitor AWS month-to-date spending and send an email alert when the configured cost threshold is exceeded.
+
+## AWS Services Used
+
+- AWS Lambda
+- AWS Cost Explorer API
+- Amazon SNS
+- Amazon EventBridge
+- IAM
+- Amazon CloudWatch
+
+## Features
+
+- Retrieves month-to-date Unblended Cost using the AWS Cost Explorer API.
+- Compares the current cost against a configurable threshold.
+- Sends an SNS email notification when the threshold is exceeded.
+- Logs the current AWS spend in CloudWatch.
+- Can be scheduled to run daily using Amazon EventBridge.
+
+## Testing
+
+For testing, the threshold was temporarily set to **$0.01** to force an alert. After successful verification, the threshold was restored to the production value of **$50.00**.
+
+## Scheduling
+
+The Lambda function is scheduled to execute daily using Amazon EventBridge.
+
+## Production Note
+
+AWS Budgets provides a managed solution for cost monitoring and notifications.
+
+AWS Lambda is preferred when custom logic is required, such as service-wise cost analysis, Slack or Microsoft Teams notifications, anomaly detection, or integration with external systems.
