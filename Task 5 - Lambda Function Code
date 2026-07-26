@@ -1,0 +1,97 @@
+import boto3
+import time
+
+# Initialize EC2 client
+ec2 = boto3.client("ec2")
+
+# Configuration
+VOLUME_ID = "vol-00b5d8da506d1fa54"
+SUBNET_ID = "subnet-028b2d465c076d20a"
+SECURITY_GROUP_ID = "sg-05a591fb68abbdf68"
+
+DEVICE_NAME = "/dev/sda1"
+
+
+def lambda_handler(event, context):
+
+    # Step 1: Find the latest snapshot for the volume
+    snapshots = ec2.describe_snapshots(
+        OwnerIds=["self"],
+        Filters=[
+            {
+                "Name": "volume-id",
+                "Values": [VOLUME_ID]
+            }
+        ]
+    )["Snapshots"]
+
+    latest_snapshot = sorted(
+        snapshots,
+        key=lambda x: x["StartTime"],
+        reverse=True
+    )[0]
+
+    snapshot_id = latest_snapshot["SnapshotId"]
+
+    print(f"Latest Snapshot: {snapshot_id}")
+
+    # Step 2: Register an AMI
+    ami = ec2.register_image(
+        Name=f"RestoredAMI-{int(time.time())}",
+        RootDeviceName=DEVICE_NAME,
+        Architecture="x86_64",
+        VirtualizationType="hvm",
+        BlockDeviceMappings=[
+            {
+                "DeviceName": DEVICE_NAME,
+                "Ebs": {
+                    "SnapshotId": snapshot_id,
+                    "VolumeSize": latest_snapshot["VolumeSize"],
+                    "VolumeType": "gp3",
+                    "DeleteOnTermination": True
+                }
+            }
+        ]
+    )
+
+    ami_id = ami["ImageId"]
+
+    print(f"AMI Created: {ami_id}")
+
+    # Step 3: Wait until the AMI becomes available
+    waiter = ec2.get_waiter("image_available")
+    waiter.wait(ImageIds=[ami_id])
+
+    print("AMI is available")
+
+    # Step 4: Launch a new EC2 instance
+    response = ec2.run_instances(
+        ImageId=ami_id,
+        InstanceType="t3.micro",
+        MinCount=1,
+        MaxCount=1,
+        SubnetId=SUBNET_ID,
+        SecurityGroupIds=[SECURITY_GROUP_ID],
+        TagSpecifications=[
+            {
+                "ResourceType": "instance",
+                "Tags": [
+                    {
+                        "Key": "RestoredFrom",
+                        "Value": snapshot_id
+                    }
+                ]
+            }
+        ]
+    )
+
+    instance_id = response["Instances"][0]["InstanceId"]
+
+    print(f"New Instance ID: {instance_id}")
+
+    return {
+        "statusCode": 200,
+        "snapshot": snapshot_id,
+        "ami": ami_id,
+        "instance": instance_id
+    }
