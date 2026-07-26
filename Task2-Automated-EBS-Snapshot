@@ -1,0 +1,36 @@
+# Task 2 - Automated EBS Snapshot Creation and Cleanup
+
+## Objective
+
+Automate EBS volume backup creation and delete snapshots older than 30 days.
+
+## AWS Services Used
+
+- AWS Lambda
+- Amazon EC2
+- Amazon EBS
+- Amazon EventBridge
+- IAM
+- Amazon CloudWatch
+
+## Features
+
+- Creates a snapshot of the specified EBS volume.
+- Tags the snapshot with `CreatedBy=Lambda-Backup`.
+- Lists snapshots created by the Lambda function.
+- Deletes snapshots older than 30 days.
+- Logs the IDs of created and deleted snapshots.
+
+## Testing
+
+The Lambda function was manually triggered. A new snapshot was successfully created and tagged. Older snapshots matching the retention policy were deleted. Snapshot creation and cleanup were verified in the EC2 console.
+
+## Scheduling
+
+The Lambda function can be scheduled using Amazon EventBridge to run weekly and automate backup management.
+
+## Production Note
+
+AWS Data Lifecycle Manager (DLM) is the preferred solution for standard snapshot scheduling and retention because it is fully managed.
+
+AWS Lambda is useful when custom retention rules, cross-account snapshot copies, notifications, or additional automation steps are required.
