@@ -1,0 +1,52 @@
+import boto3
+from datetime import datetime, timedelta
+
+# AWS Clients
+ce = boto3.client("ce")
+sns = boto3.client("sns")
+
+# Configuration
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:230470759851:DailyAWSCostAlertTopic"
+
+# Production threshold (change to 0.01 only while testing)
+THRESHOLD = 50.0
+
+
+def lambda_handler(event, context):
+    today = datetime.utcnow().date()
+    first_day = today.replace(day=1)
+
+    response = ce.get_cost_and_usage(
+        TimePeriod={
+            "Start": first_day.strftime("%Y-%m-%d"),
+            "End": (today + timedelta(days=1)).strftime("%Y-%m-%d"),
+        },
+        Granularity="MONTHLY",
+        Metrics=["UnblendedCost"],
+    )
+
+    amount = float(
+        response["ResultsByTime"][0]["Total"]["UnblendedCost"]["Amount"]
+    )
+
+    print(f"Current Month-to-Date Cost: ${amount:.2f}")
+
+    if amount > THRESHOLD:
+        message = (
+            f"AWS Month-to-Date Cost Alert\n\n"
+            f"Current Cost: ${amount:.2f}\n"
+            f"Threshold: ${THRESHOLD:.2f}"
+        )
+
+        sns.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject="AWS Daily Cost Alert",
+            Message=message,
+        )
+
+        print("SNS Alert Sent!")
+
+    return {
+        "statusCode": 200,
+        "currentCost": amount,
+    }
