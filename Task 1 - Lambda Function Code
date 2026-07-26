@@ -1,0 +1,55 @@
+import boto3
+from datetime import datetime, timezone, timedelta
+
+# Initialize S3 client
+s3 = boto3.client("s3")
+
+# Bucket name
+BUCKET_NAME = "khushboo-s3-cleanup-2026"
+
+# Production threshold: 30 days
+AGE_THRESHOLD_DAYS = 30
+
+
+def lambda_handler(event, context):
+    """
+    Deletes objects older than the configured threshold.
+    Uses an S3 paginator to ensure all objects are processed.
+    """
+
+    cutoff_time = datetime.now(timezone.utc) - timedelta(days=AGE_THRESHOLD_DAYS)
+
+    paginator = s3.get_paginator("list_objects_v2")
+
+    deleted_files = []
+
+    pages = paginator.paginate(Bucket=BUCKET_NAME)
+
+    for page in pages:
+
+        if "Contents" not in page:
+            continue
+
+        for obj in page["Contents"]:
+
+            object_key = obj["Key"]
+            last_modified = obj["LastModified"]
+
+            if last_modified < cutoff_time:
+
+                s3.delete_object(
+                    Bucket=BUCKET_NAME,
+                    Key=object_key
+                )
+
+                deleted_files.append(object_key)
+
+                print(f"Deleted: {object_key}")
+
+    if not deleted_files:
+        print("No objects older than 30 days were found.")
+
+    return {
+        "statusCode": 200,
+        "deleted_objects": deleted_files
+    }
