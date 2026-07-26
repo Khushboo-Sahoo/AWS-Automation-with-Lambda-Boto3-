@@ -1,0 +1,25 @@
+# Task 1 - Automated S3 Bucket Cleanup
+
+## Objective
+Automatically delete S3 objects older than 30 days using AWS Lambda.
+
+## AWS Services Used
+- AWS Lambda
+- Amazon S3
+- IAM
+- Amazon CloudWatch
+
+## Features
+- Lists all objects using the S3 paginator.
+- Compares each object's LastModified timestamp with the current UTC time.
+- Deletes objects older than 30 days.
+- Logs the names of deleted objects.
+- Returns the list of deleted objects.
+
+## Testing
+For testing, the age threshold was temporarily reduced so that recently uploaded files could be deleted. The final production code restores the threshold to 30 days.
+
+## Production Note
+For simple age-based deletion, Amazon S3 Lifecycle Rules are the preferred solution because they require no code and are fully managed.
+
+AWS Lambda is useful when custom logic is required, such as deleting objects based on file naming patterns, metadata, or triggering additional actions like sending notifications or updating other AWS services.
