@@ -1,0 +1,41 @@
+import boto3
+from datetime import datetime
+
+# Initialize EC2 client
+ec2 = boto3.client("ec2")
+
+
+def lambda_handler(event, context):
+    """
+    Automatically tags newly launched EC2 instances.
+    Triggered by an EventBridge rule when an EC2 instance enters the 'running' state.
+    """
+
+    # Extract Instance ID from the EventBridge event
+    instance_id = event["detail"]["instance-id"]
+
+    # Current date
+    launch_date = datetime.utcnow().strftime("%Y-%m-%d")
+
+    # Create tags
+    ec2.create_tags(
+        Resources=[instance_id],
+        Tags=[
+            {
+                "Key": "LaunchDate",
+                "Value": launch_date
+            },
+            {
+                "Key": "Environment",
+                "Value": "Development"
+            }
+        ]
+    )
+
+    print(f"Successfully tagged instance: {instance_id}")
+
+    return {
+        "statusCode": 200,
+        "instance_id": instance_id,
+        "message": "Tags applied successfully."
+    }
