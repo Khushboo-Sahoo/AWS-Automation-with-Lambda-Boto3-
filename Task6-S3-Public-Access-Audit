@@ -1,0 +1,41 @@
+# Task 6 - Audit S3 Buckets for Public Access and Notify
+
+## Objective
+
+Automatically audit all Amazon S3 buckets for public accessibility and notify administrators when an insecure bucket is detected.
+
+## AWS Services Used
+
+- AWS Lambda
+- Amazon S3
+- Amazon SNS
+- Amazon EventBridge
+- IAM
+- Amazon CloudWatch
+
+## Features
+
+- Lists all S3 buckets in the AWS account.
+- Checks Block Public Access configuration.
+- Checks Bucket Policy Status (`IsPublic`).
+- Checks Bucket ACL permissions.
+- Identifies publicly accessible buckets.
+- Sends an SNS email notification listing all public buckets.
+- Logs audit results in Amazon CloudWatch.
+
+## Scheduling
+
+The Lambda function is scheduled to run daily using Amazon EventBridge.
+
+## Testing
+
+1. Block Public Access was temporarily disabled for the test bucket.
+2. A public-read bucket policy was applied.
+3. The Lambda function successfully detected the public bucket.
+4. An SNS email notification was received.
+5. The public bucket policy was removed.
+6. Block Public Access was re-enabled immediately after testing.
+
+## Security Note
+
+Since April 2023, new Amazon S3 buckets have Block Public Access enabled and ACLs disabled by default. Therefore, the audit checks multiple security controls including Block Public Access configuration, Bucket Policy Status, and ACL permissions instead of relying on ACLs alone.
