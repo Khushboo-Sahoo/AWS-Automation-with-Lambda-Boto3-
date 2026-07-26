@@ -1,0 +1,36 @@
+# Task 5 - Restore an EC2 Instance from the Latest Snapshot
+
+## Objective
+
+Automate disaster recovery by restoring an EC2 instance from the latest available EBS snapshot.
+
+## AWS Services Used
+
+- AWS Lambda
+- Amazon EC2
+- Amazon EBS
+- IAM
+- Amazon CloudWatch
+
+## Features
+
+- Identifies the latest snapshot for a specified EBS volume.
+- Registers a new AMI from the snapshot.
+- Waits until the AMI becomes available.
+- Launches a new EC2 instance (`t3.micro`) from the AMI.
+- Tags the restored instance with the snapshot ID.
+- Logs the snapshot ID, AMI ID, and new EC2 instance ID.
+
+## Configuration
+
+- Volume ID: `vol-00b5d8da506d1fa54`
+- Subnet ID: `subnet-028b2d465c076d20a`
+- Security Group ID: `sg-05a591fb68abbdf68`
+
+## Testing
+
+The Lambda function was manually triggered. It successfully identified the latest snapshot, created an AMI, launched a new EC2 instance, and applied the `RestoredFrom` tag. The restored instance booted successfully and the tag was verified in the EC2 console.
+
+## Cleanup
+
+After testing, the temporary EC2 instance should be terminated to avoid unnecessary AWS charges.
