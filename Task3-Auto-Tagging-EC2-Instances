@@ -1,0 +1,38 @@
+# Task 3 - Auto-Tagging EC2 Instances on Launch
+
+## Objective
+
+Automatically tag newly launched EC2 instances for resource tracking and cost allocation.
+
+## AWS Services Used
+
+- AWS Lambda
+- Amazon EC2
+- Amazon EventBridge
+- IAM
+- Amazon CloudWatch
+
+## Features
+
+- Triggered automatically when an EC2 instance enters the **Running** state.
+- Extracts the EC2 Instance ID from the EventBridge event.
+- Applies the following tags:
+  - LaunchDate = Current Date
+  - Environment = Development
+- Logs a confirmation message after tagging.
+
+## EventBridge Rule
+
+The Lambda function is triggered using the following event pattern:
+
+- Source: `aws.ec2`
+- Detail Type: `EC2 Instance State-change Notification`
+- State: `running`
+
+## Testing
+
+A new EC2 instance was launched manually. After the instance entered the **Running** state, the Lambda function automatically applied the configured tags. The tags were verified from the EC2 console.
+
+## Bonus
+
+In production environments, the launching IAM user can be extracted from CloudTrail events and automatically added as an **Owner** tag. This improves resource ownership tracking and cost allocation.
